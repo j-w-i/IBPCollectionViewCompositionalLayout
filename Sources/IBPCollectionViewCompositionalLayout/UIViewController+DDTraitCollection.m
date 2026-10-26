@@ -36,6 +36,16 @@
     Method originalMethod = class_getInstanceMethod(theClass, originalSelector);
     Method swizzledMethod = class_getInstanceMethod(theClass, swizzledSelector);
 
+    // Below iOS 8 there is no UIViewController.traitCollection to exchange. Adding
+    // the method is enough; calling method_getImplementation(NULL) would install a
+    // null IMP and crash the first time the shim was used.
+    if (originalMethod == NULL) {
+        class_addMethod(theClass, originalSelector,
+                        method_getImplementation(swizzledMethod),
+                        method_getTypeEncoding(swizzledMethod));
+        return;
+    }
+
     BOOL didAddMethod = class_addMethod(theClass, originalSelector, method_getImplementation(swizzledMethod), method_getTypeEncoding(swizzledMethod));
 
     if (didAddMethod) {

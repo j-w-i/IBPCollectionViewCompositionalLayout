@@ -30,7 +30,15 @@
         return nil;
     }
 
-    _observers = [NSMapTable strongToWeakObjectsMapTable];
+    // NSMapTable.strongToWeakObjectsMapTable is iOS 6+, but +load below iOS 8
+    // also runs on iOS 5, where calling it raised doesNotRecognizeSelector and
+    // killed the app during image loading.
+    if ([NSMapTable respondsToSelector:@selector(strongToWeakObjectsMapTable)]) {
+        _observers = [NSMapTable strongToWeakObjectsMapTable];
+    } else {
+        _observers = [NSMapTable mapTableWithKeyOptions:NSPointerFunctionsStrongMemory
+                                           valueOptions:NSPointerFunctionsStrongMemory];
+    }
 
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(applicationDidChangeOrientation:)
